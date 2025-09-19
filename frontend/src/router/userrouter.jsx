@@ -7,6 +7,7 @@ import VehiclePage from '../pages/Vehicle';
 import AdminDashboard from '../pages/AdminDashboard';
 import AdminParkingSlots from '../pages/AdminParkingSlots';
 import UserBookings from '../pages/UserBookings';
+import BookingDetails from './../pages/BookingDetails';
 
 const userRouter = createBrowserRouter(
   [
@@ -71,6 +72,13 @@ const userRouter = createBrowserRouter(
       element:
         <div>
             <AdminParkingSlots/>
+        </div>,
+    },
+    {
+      path:"/admin/bookingdetails/:id",
+      element:
+        <div>
+            <BookingDetails/>
         </div>,
     },
     

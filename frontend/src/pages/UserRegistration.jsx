@@ -23,6 +23,9 @@ const UserRegistration = () => {
     const [showConfirm, setShowConfirm] = useState(false);
     const [loading, setLoading] = useState(false); 
 
+    const [showOtpModal, setShowOtpModal] = useState(false);
+    const [otp, setOtp] = useState("");
+
     const handleChange = (e) => {
         const { name, value, files } = e.target;
         if (name === "avatar") {
@@ -68,24 +71,44 @@ const UserRegistration = () => {
             return;
         }
 
+        setShowOtpModal(true);
+
     // You can submit data to the backend here
         //console.log("Registration Data:", formData);
 
 
+        
+
+        
+        
+        fetch('/api/otp/sendotp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }, 
+            body: JSON.stringify({ email: formData.email }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                toast.success("OTP sent to your email. Please verify.");
+            } else {
+                toast.error(data.message || "An error occurred while sending OTP.");
+                console.error("OTP Error:", data.message );    
+            }  
+        })
+        .catch(error => {
+            toast.error(error?.response?.data?.message || error.message || "An error occurred while sending OTP.");
+            console.error("OTP Error:", error);
+        });
+
+
+        /*
+
         setLoading(true);
         const loadingToast = toast.loading("Registering... Please wait.");
 
-        const data = new FormData();
-        data.append("fullname", fullname);
-        data.append("username", username);
-        data.append("email", email);
-        data.append("password", password);
-        if (formData.avatar) {
-            data.append("avatar", formData.avatar);
-        }
 
-
-       
         fetch('/api/users/register', {
             method: 'POST',
             body: data,
@@ -106,7 +129,82 @@ const UserRegistration = () => {
                 console.error("Registration error:", data.message );    
             }
         })
+            */
     };
+
+
+    const verifyotp = () => {
+        if(otp.trim() === "") {
+            toast.error("Please enter the OTP.");
+            return;
+        }
+
+        fetch('/api/otp/verifyotp', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: formData.email, otp: otp }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+
+                setShowOtpModal(false);
+                setLoading(true);
+                const loadingToast = toast.loading("Registering... Please wait.");
+                
+                const { fullname, username, email, password, confirmPassword } = formData;
+                const data = new FormData();
+                data.append("fullname", fullname);
+                data.append("username", username);
+                data.append("email", email);
+                data.append("password", password);
+                if (formData.avatar) {
+                    data.append("avatar", formData.avatar);
+                }
+                    
+                fetch('/api/users/register', {
+                    method: 'POST',
+                    body: data,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        setTimeout(() => {
+                            window.location.href = "/login"; // Redirect to login page
+                        }, 2000);
+                        toast.dismiss(loadingToast);
+                        setLoading(false);
+                        toast.success("Registration successful! Redirecting to login...");
+                    } else {
+                        toast.dismiss(loadingToast);
+                        setLoading(false);
+                        toast.error(data.message || "An error occurred during registration.");
+                        console.error("Registration error:", data.message );    
+                    }
+                })
+                .catch(error => {
+                    setLoading(false);
+                    toast.dismiss(loadingToast);
+                    toast.error(error?.response?.data?.message || error.message || "An error occurred during registration.");
+                    console.error("Registration error:", error);
+                });
+            } else {
+                toast.error(data.message || "An error occurred while verifying OTP."); 
+                console.error("OTP Verification Error:", data.message );
+            }
+        })
+        .catch(error => {
+            toast.error(error?.response?.data?.message || error.message || "An error occurred while verifying OTP.");
+            console.error("OTP Verification Error:", error);
+        });
+    }
+    
+
+
+                
+                
 
     return (
         <div>
@@ -264,6 +362,34 @@ const UserRegistration = () => {
                   </Link>
                 </p>
                 </form>
+                {showOtpModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                    <h2 className="text-xl font-semibold mb-4">Verify OTP</h2>
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      placeholder="Enter OTP"
+                      className="w-full border border-gray-300 rounded px-4 py-2 mb-4"
+                    />
+                    <div className="flex justify-between">
+                      <button
+                        onClick={() => setShowOtpModal(false)}
+                        className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-200"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={verifyotp}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-800 transition duration-200"
+                      >
+                        Verify
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                )}
             </div>
         </section>
     </div>

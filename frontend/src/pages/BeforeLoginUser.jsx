@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { Eye, EyeOff } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-//import { useUser } from "../components/UserContext";
 import { useNavigate } from "react-router-dom";
 import api from "../components/axios.jsx";
 
@@ -12,7 +11,6 @@ import api from "../components/axios.jsx";
 
 const BeforeLoginUser = () => {
 
-  //const { profilePhoto, setProfilePhoto } = useUser();
   const [input, setInput] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

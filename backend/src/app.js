@@ -20,6 +20,7 @@ import vehicleRouter from "./routes/vehicleroutes.js"
 import adminRouter from "./routes/adminroutes.js"
 import slotRouter from "./routes/parkingslotroutes.js"
 import bookingRouter from "./routes/bookingroutes.js"
+import otprouter from "./routes/otproutes.js"
 import { errorHandler } from "./middleware/errormiddleware.js"
 
 
@@ -29,6 +30,7 @@ app.use("/api/admin", adminRouter)
 app.use("/api/vehicle",vehicleRouter)
 app.use("/api/slots",slotRouter)
 app.use("/api/booking",bookingRouter)
+app.use("/api/otp",otprouter)
 
 
 

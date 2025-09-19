@@ -22,6 +22,7 @@ const UserBookings = () => {
     const fetchBookings = async () => {
       try {
         const response = await api.get("/api/booking");
+
         setBookings(response.data.data || []);
       } catch (error) {
         toast.error("Failed to load bookings");
@@ -32,17 +33,50 @@ const UserBookings = () => {
     fetchBookings();
   }, []);
 
-  const handleCancel = async (bookingId) => {
+const handleCancel = async (bookingId) => {
+  try {
+    await api.delete(`/api/booking/cancelbooking/${bookingId}`);
+    toast.success("Booking cancelled successfully!");
+
+    // move cancelled booking into "cancelled" category
+    setBookings((prev) =>
+      prev.map((b) =>
+        b._id === bookingId ? { ...b, status: "Cancelled" } : b
+      )
+    );
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Failed to cancel booking");
+  }
+};
+
+
+  const handleCheckout = async (bookingId) => {
     try {
-      await api.delete(`/api/booking/${bookingId}`);
-      toast.success("Booking cancelled successfully!");
+      const response = await api.put(`/api/booking/exitbooking/${bookingId}`, {
+        exittime: new Date(),
+      });
+      toast.success("Checked out successfully!");
       setBookings((prev) =>
         prev.map((b) =>
-          b._id === bookingId ? { ...b, status: "Cancelled" } : b
+          b._id === bookingId ? { ...b, ...response.data.data } : b
         )
       );
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to cancel booking");
+      toast.error(error.response?.data?.message || "Failed to checkout");
+    }
+  };
+
+  const handlePayment = async (bookingId) => {
+    try {
+      const response = await api.patch(`/api/booking/${bookingId}/pay`);
+      toast.success("Payment successful!");
+      setBookings((prev) =>
+        prev.map((b) =>
+          b._id === bookingId ? { ...b, paymentStatus: "paid" } : b
+        )
+      );
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Payment failed");
     }
   };
 
@@ -62,75 +96,116 @@ const UserBookings = () => {
     }
   };
 
-  const renderTable = (data, allowCancel = false) => (
-    <div className="overflow-x-auto">
-      <table className="w-full border border-gray-200 rounded-lg overflow-hidden">
-        <thead className="bg-gray-100 text-gray-700">
-          <tr>
-            <th className="px-4 py-3 text-left">#</th>
-            <th className="px-4 py-3 text-left">Slot Number</th>
-            <th className="px-4 py-3 text-left">Vehicle Number</th>
-            <th className="px-4 py-3 text-left">Vehicle Type</th>
-            <th className="px-4 py-3 text-left">Entry Time</th>
-            <th className="px-4 py-3 text-left">Exit Time</th>
-            <th className="px-4 py-3 text-left">Payment</th>
-            {allowCancel && <th className="px-4 py-3 text-left">Action</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((b, index) => (
-            <tr key={b._id} className="border-t hover:bg-gray-50 transition">
-              <td className="px-4 py-3">{index + 1}</td>
-              <td className="px-4 py-3">{b.slot?.slotno || "—"}</td>
-              <td className="px-4 py-3">{b.vehicle?.vehicleno || "—"}</td>
-              <td className="px-4 py-3">
-                {b.vehicle?.vehicletype === "2-wheeler"
-                  ? "Two-Wheeler"
-                  : "Four-Wheeler"}
-              </td>
-              <td className="px-4 py-3">
-                {b.entrytime ? new Date(b.entrytime).toLocaleString() : "—"}
-              </td>
-              <td className="px-4 py-3">
-                {b.exittime ? new Date(b.exittime).toLocaleString() : "—"}
-              </td>
-              <td className="px-4 py-3">{getPaymentStatus(b.paymentStatus)}</td>
-              {allowCancel && (
-                <td className="px-4 py-3">
-                  <button
-                    onClick={() => handleCancel(b._id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
-                  >
-                    Cancel
-                  </button>
-                </td>
+  const renderTable = (data, type) => (
+  <div className="overflow-x-auto">
+    <table className="w-full border border-gray-200 rounded-lg overflow-hidden">
+      <thead className="bg-gray-100 text-gray-700">
+        <tr>
+          <th className="px-4 py-3 text-left">#</th>
+          <th className="px-4 py-3 text-left">Slot Number</th>
+          <th className="px-4 py-3 text-left">Slot Floor</th>
+          <th className="px-4 py-3 text-left">Slot Rate</th>
+          <th className="px-4 py-3 text-left">Vehicle Number</th>
+          <th className="px-4 py-3 text-left">Vehicle Type</th>
+          <th className="px-4 py-3 text-left">Entry Time</th>
+          {type !== "cancelled" && (
+            <>
+              <th className="px-4 py-3 text-left">Exit Time</th>
+              {type === "completed" && (
+                <th className="px-4 py-3 text-left">Total Fare</th>
               )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+              <th className="px-4 py-3 text-left">Payment</th>
+              <th className="px-4 py-3 text-left">Action</th>
+            </>
+          )}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((b, index) => (
+          <tr key={b._id} className="border-t hover:bg-gray-200 transition">
+            <td className="px-4 py-3">{index + 1}</td>
+            <td className="px-4 py-3">{b.slot?.slotno || "—"}</td>
+            <td className="px-4 py-3">{b.slot?.floor || "—"}</td>
+            <td className="px-4 py-3">₹{b?.rate ?? "—"}</td>
+            <td className="px-4 py-3">{b.vehicle?.vehicleno || "—"}</td>
+            <td className="px-4 py-3">
+              {b.vehicle?.vehicletype === "2-wheeler"
+                ? "Two-Wheeler"
+                : "Four-Wheeler"}
+            </td>
+            <td className="px-4 py-3">
+              {b.entrytime ? new Date(b.entrytime).toLocaleString() : "—"}
+            </td>
+
+            {type !== "cancelled" && (
+              <>
+                <td className="px-4 py-3">
+                  {b.exittime ? new Date(b.exittime).toLocaleString() : "—"}
+                </td>
+
+                {type === "completed" && (
+                  <td className="px-4 py-3">₹{b?.charges ?? "—"}</td>
+                )}
+
+                <td className="px-4 py-3">{getPaymentStatus(b.paymentStatus)}</td>
+
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-2">
+                    {type === "active" && (
+                      <>
+                        <button
+                          onClick={() => handleCheckout(b._id)}
+                          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+                        >
+                          Checkout
+                        </button>
+                        <button
+                          onClick={() => handleCancel(b._id)}
+                          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    )}
+                    {type === "completed" && b.paymentStatus !== "paid" && (
+                      <button
+                        onClick={() => handlePayment(b._id)}
+                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition"
+                      >
+                        Pay
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </>
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
 
   let content;
   if (activeTab === "active") {
     content =
       activeBookings.length > 0 ? (
-        renderTable(activeBookings, true)
+        renderTable(activeBookings, "active")
       ) : (
         <p className="text-gray-500 text-center">No active bookings.</p>
       );
   } else if (activeTab === "completed") {
     content =
       completedBookings.length > 0 ? (
-        renderTable(completedBookings)
+        renderTable(completedBookings, "completed")
       ) : (
         <p className="text-gray-500 text-center">No completed bookings.</p>
       );
   } else {
     content =
       cancelledBookings.length > 0 ? (
-        renderTable(cancelledBookings)
+        renderTable(cancelledBookings, "cancelled")
       ) : (
         <p className="text-gray-500 text-center">No cancelled bookings.</p>
       );
@@ -142,7 +217,7 @@ const UserBookings = () => {
       <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="flex flex-1 justify-center items-start py-10">
-        <div className="bg-white shadow-lg rounded-2xl p-8 w-[95%] max-w-6xl">
+        <div className="bg-white shadow-lg rounded-2xl p-8 w-[95%] ">
           <h2 className="text-2xl font-semibold mb-6 text-gray-700 text-center">
             My Bookings
           </h2>

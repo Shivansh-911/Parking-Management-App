@@ -42,10 +42,20 @@ const registerUser = asynchandler(async (req,res) => {
     if(existedUser)
         throw new ApiError(409, "User Already exists with this email or username")
 
+    /* file upload to cloudinary from local path */
+    /*
     const avatarLocalPath = req.files?.avatar?.[0]?.path;
 
     const avatar = await uploadOnCloudianary(avatarLocalPath);
+    */
 
+    /* file upload to cloudinary from memory buffer */
+    const avatarBuffer = req.files?.avatar?.[0]?.buffer;
+    const avatar = await uploadOnCloudianary(avatarBuffer);
+
+    console.log("Avatar uploaded to Cloudinary:", avatar.url);
+    
+    
     const user = await User.create({
         fullname,
         username,
@@ -54,6 +64,7 @@ const registerUser = asynchandler(async (req,res) => {
         avatarPublicId: avatar?.public_id || "",
         email
     })
+
 
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
@@ -64,6 +75,7 @@ const registerUser = asynchandler(async (req,res) => {
     console.log("User Registered");
     return res.status(201).json(
         new ApiResponse(200,createdUser,"User is Created")
+        //new ApiResponse(200,"User is Created")
     );
 })
 
@@ -254,10 +266,11 @@ const updateDetails = asynchandler(async (req,res) => {
 
 const updateAvatar = asynchandler(async (req, res) => {
   
-    const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    //const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    const avatarBuffer = req.files?.avatar?.[0]?.buffer;
     const user = req.auth;
 
-    if (!avatarLocalPath) {
+    if (!avatarBuffer) {
         throw new ApiError(400, "Avatar file is required");
     }
 
@@ -265,7 +278,7 @@ const updateAvatar = asynchandler(async (req, res) => {
         await deleteFromCloudinary(user.avatarPublicId);
     }
 
-    const uploadedAvatar = await uploadOnCloudianary(avatarLocalPath);
+    const uploadedAvatar = await uploadOnCloudianary(avatarBuffer);
 
     if (!uploadedAvatar) {
         throw new ApiError(500, "Avatar upload failed");

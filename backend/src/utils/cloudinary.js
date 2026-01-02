@@ -22,6 +22,11 @@ const uploadImageOnCloudinary = async (filePath) => {
 }
 */
 
+
+/* For uploading file to cloudinary from local path */
+
+/*
+
 const uploadOnCloudianary = async (localFilePath) => {
 
     try {
@@ -39,6 +44,40 @@ const uploadOnCloudianary = async (localFilePath) => {
         return null; 
     }
 };
+
+*/
+
+/* For uploading file to cloudinary from memory buffer */
+
+const uploadOnCloudianary = async (buffer) => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            { resource_type: 'auto' },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            }
+        );
+
+        stream.end(buffer);
+        
+        
+    }).then((result) => {
+        console.log("file is uploaded on cloudinary from buffer");
+        return result;
+    }).catch((error) => {
+        console.log("ERROR: ", error);
+        return null;
+    });
+    
+}
+
+
+
+
 
 
 const deleteFromCloudinary = async (publicId) => {

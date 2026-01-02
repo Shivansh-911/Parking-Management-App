@@ -92,7 +92,8 @@ const loginUser = asynchandler(async (req,res) => {
 
     const Options = {
         httpOnly: true,
-        secure: true
+        secure: false,
+        sameSite: "lax"
     }
     console.log("User Loggedin Successfully");
 
@@ -127,7 +128,8 @@ const logoutUser = asynchandler(async (req,res) => {
 
     const Options = {
         httpOnly: true,
-        secure: true
+        secure: false,
+        sameSite: "lax"
     }
 
     return res.status(200).clearCookie("accessToken",Options).clearCookie("refreshToken",Options).json(
@@ -150,7 +152,8 @@ const refreshAccessToken = asynchandler(async (req,res) => {
 
     const Options = {
         httpOnly: true,
-        secure: true
+        secure: false,
+        sameSite: "lax"
     }
 
     const {accessToken, refreshToken} = await generateAccessandRefreshToken(user._id)

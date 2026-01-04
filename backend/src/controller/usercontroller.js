@@ -53,7 +53,7 @@ const registerUser = asynchandler(async (req,res) => {
     const avatarBuffer = req.files?.avatar?.[0]?.buffer;
     const avatar = await uploadOnCloudianary(avatarBuffer);
 
-    console.log("Avatar uploaded to Cloudinary:", avatar.url);
+    console.log("Avatar uploaded to Cloudinary:", avatar?.url);
     
     
     const user = await User.create({

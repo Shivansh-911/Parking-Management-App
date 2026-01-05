@@ -9,13 +9,14 @@ const api = axios.create({
   withCredentials: true, 
 });
 
-// Attach access token to every request
+// Attach access token to every requestgit 
 api.interceptors.request.use(
   (config) => {
     console.log("Error is here")
     const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+
     }
     return config;
   },

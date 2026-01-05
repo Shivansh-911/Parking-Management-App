@@ -71,7 +71,7 @@ const UserRegistration = () => {
             return;
         }
 
-        setShowOtpModal(true);
+        
 
     // You can submit data to the backend here
         //console.log("Registration Data:", formData);
@@ -91,6 +91,7 @@ const UserRegistration = () => {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                setShowOtpModal(true);
                 toast.success("OTP sent to your email. Please verify.");
             } else {
                 toast.error(data.message || "An error occurred while sending OTP.");
@@ -163,6 +164,8 @@ const UserRegistration = () => {
                 if (formData.avatar) {
                     data.append("avatar", formData.avatar);
                 }
+
+                console.log("Registration Data:", data);
                     
                 fetch('/api/users/register', {
                     method: 'POST',

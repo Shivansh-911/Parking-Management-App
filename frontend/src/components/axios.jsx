@@ -1,15 +1,18 @@
 import axios from "axios";
 import { toast } from "react-toastify";
 
+import  dotenv  from 'dotenv';
+
 // Create Axios instance
 const api = axios.create({
-  baseURL: "http://localhost:8000", 
+  baseURL: `${import.meta.env.VITE_API_URL}`, 
   withCredentials: true, 
 });
 
 // Attach access token to every request
 api.interceptors.request.use(
   (config) => {
+    console.log("Error is here")
     const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

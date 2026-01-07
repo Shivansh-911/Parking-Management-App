@@ -4,6 +4,7 @@ import Header from "../components/Headers/Header";
 import { ToastContainer, toast } from "react-toastify";
 import { Eye , EyeOff , CircleUserRound } from 'lucide-react';
 import "react-toastify/dist/ReactToastify.css";
+import api from "../components/axios.jsx";
 
 
 const UserRegistration = () => {
@@ -79,9 +80,9 @@ const UserRegistration = () => {
 
         
 
-        
-        
-        fetch('/api/otp/sendotp', {
+
+
+        fetch(`${import.meta.env.VITE_API_URL}/api/otp/sendotp`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -140,7 +141,7 @@ const UserRegistration = () => {
             return;
         }
 
-        fetch('/api/otp/verifyotp', {
+        fetch(`${import.meta.env.VITE_API_URL}/api/otp/verifyotp`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -167,7 +168,7 @@ const UserRegistration = () => {
 
                 console.log("Registration Data:", data);
                     
-                fetch('/api/users/register', {
+                fetch(`${import.meta.env.VITE_API_URL}/api/users/register`, {
                     method: 'POST',
                     body: data,
                 })
